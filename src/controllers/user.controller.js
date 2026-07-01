@@ -6,6 +6,11 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken";
 
 
+const options = {
+    httpOnly: true,
+    secure: true
+}
+
 const generateAccessAndRefreshTokens = async(userId) => {
     try {
         const user = await User.findById(userId)
@@ -164,11 +169,6 @@ const logoutUser = asyncHandler( async(req, res) => {
         }
     )
 
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-
     return res
     .status(200)
     .clearCookie("accessToken", options)
@@ -196,11 +196,6 @@ const refreshAccessToken = asyncHandler (async (req, res) => {
             throw new ApiError(401, "Refresh token is expired or used")
         }
     
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
-    
         const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id)
     
         res
@@ -210,7 +205,7 @@ const refreshAccessToken = asyncHandler (async (req, res) => {
         .json(
             new ApiResponse(200, {
                 accessToken,
-                newRefreshToken
+                refreshToken: newRefreshToken
             }, "Access token refreshed")
         )
 
