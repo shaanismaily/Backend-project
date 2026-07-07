@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken";
-
+import { v2 as cloudinary } from "cloudinary"
 
 const options = {
     httpOnly: true,
@@ -78,8 +78,10 @@ const registerUser = asyncHandler (async (req, res) => {
 
     const user = await User.create({
         fullname,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
+        avatar: avatar.secure_url,
+        avatarPublicId: avatar.public_id,
+        coverImage: coverImage?.secure_url || "",
+        coverImagePublicId: coverImage?.public_id || "",
         email,
         password,
         username: username.toLowerCase()
@@ -268,7 +270,7 @@ const updateUserAvatar = asyncHandler( async(req, res) => {
         throw new ApiError(400, "Avatar file is missing")
     }
 
-    // TODO: delete old avatar from cloudinary - assignment
+    const existingUser = await User.findById(req.user._id)
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
@@ -280,11 +282,20 @@ const updateUserAvatar = asyncHandler( async(req, res) => {
         req.user?._id,
         {
             $set: {
-                avatar: avatar.url
+                avatar: avatar.secure_url,
+                avatarPublicId: avatar.public_id
             }
         },
         {new: true}
     ).select("-password")
+
+    try {
+        if (existingUser.avatarPublicId) {
+            await cloudinary.uploader.destroy(existingUser.avatarPublicId);
+        }
+    } catch (err) {
+        console.error("Failed to delete old avatar:", err);
+    }
 
     return res
     .status(200)
@@ -299,6 +310,8 @@ const updateUserCoverImage = asyncHandler( async(req, res) => {
         throw new ApiError(400, "Cover image file is missing")
     }
 
+    const existingUser = await User.findById(req.user._id)
+
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
     if (!coverImage.url) {
@@ -309,11 +322,20 @@ const updateUserCoverImage = asyncHandler( async(req, res) => {
         req.user?._id,
         {
             $set: {
-                coverImage: coverImage.url
+                coverImage: coverImage.secure_url,
+                coverImagePublicId: coverImage.public_id
             }
         },
         {new: true}
     ).select("-password")
+
+    try {
+        if (existingUser.coverImagePublicId) {
+            await cloudinary.uploader.destroy(existingUser.coverImagePublicId)
+        }
+    } catch (error) {
+        console.error("Failed to delete old cover image: ", error)
+    }
 
     return res
     .status(200)
