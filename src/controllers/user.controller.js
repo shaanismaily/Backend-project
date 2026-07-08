@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary"
+import mongoose from "mongoose"
 
 const options = {
     httpOnly: true,
@@ -456,7 +457,7 @@ const getWatchHistory = asyncHandler( async(req, res) => {
 
     return res
     .status(200)
-    .json(200, user[0].watchHistory, "Watch history fetched successfully")
+    .json(new ApiResponse(200, user[0].watchHistory, "Watch history fetched successfully"))
 })
 
 export { 
