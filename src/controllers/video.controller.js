@@ -87,7 +87,6 @@ const publishAVideo = asyncHandler( async(req, res) => {
 
 const getVideoById = asyncHandler( async(req, res) => {
     const { videoId } = req.params
-    console.log("getVideoById called");
 
     const video = await Video.findById(videoId)
 
@@ -117,6 +116,10 @@ const updateVideo = asyncHandler( async(req, res) => {
 
     if (!oldVideo) {
         throw new ApiError(404, "Video not found");
+    }
+
+    if (oldVideo.owner.toString() !== req.user?._id.toString()) {
+        throw new ApiError(403, "You are not authorized")
     }
 
     let thumbnail;
