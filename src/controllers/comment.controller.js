@@ -30,7 +30,6 @@ const addComment = asyncHandler( async(req, res) => {
     const { videoId } = req.params
     const owner = req.user
     const { content } = req.body
-    console.log("hello from add comment")
 
     const video = await Video.findById(videoId)
 
@@ -64,10 +63,9 @@ const addComment = asyncHandler( async(req, res) => {
 const updateComment = asyncHandler( async(req, res) => {
     const { commentId } = req.params
     const { content } = req.body
-    console.log(req.user)
 
     if (!content?.trim()) {
-        throw new ApiError(400, "Content is required")
+        throw new ApiError(400, "Comment cannot be empty")
     }
 
     const comment = await Comment.findById(commentId)
