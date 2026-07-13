@@ -51,6 +51,7 @@ const getChannelStats = asyncHandler( async(req, res) => {
         },
         {
             $project: {
+                _id: 0,
                 totalViews: {
                     $sum: "$videos.views"
                 },
@@ -70,7 +71,6 @@ const getChannelStats = asyncHandler( async(req, res) => {
     if (stats.length === 0) {
         throw new ApiError(404, "Channel does not exists")
     }
-    console.log(stats);
     return res.status(200).json(
         new ApiResponse(200, stats[0], "Channel stats fetched successfully")
     )
