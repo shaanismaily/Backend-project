@@ -1,9 +1,9 @@
 import { isValidObjectId } from "mongoose";
-import { Playlist } from "../models/playlist.model";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
-import { Video } from "../models/video.model";
+import { Playlist } from "../models/playlist.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { Video } from "../models/video.model.js";
 
 const createPlaylist = asyncHandler( async(req, res) => {
     const { name, description } = req.body
@@ -40,7 +40,7 @@ const getUserPlaylists = asyncHandler( async(req, res) => {
 const getPlaylistById = asyncHandler( async(req, res) => {
     const { playlistId } = req.params
 
-    if (!isValidObjectId(playlistId) || !isValidObjectId(videoId)) {
+    if (!isValidObjectId(playlistId)) {
         throw new ApiError(400, "Invalid playlist ID")
     }
 
@@ -76,7 +76,7 @@ const addVideoToPlaylist = asyncHandler( async(req, res) => {
         playlistId,
         {
             $addToSet: {
-                video: videoId
+                videos: videoId
             }
         },
         { new: true }
@@ -104,11 +104,11 @@ const removeVideoFromPlaylist = asyncHandler( async(req, res) => {
         throw new ApiError(403, "You are not authorized")
     }
     
-    if (!playlist.video.includes(videoId)) {
+    if (!playlist.videos.includes(videoId)) {
         throw new ApiError(404, "Video does not exists in playlist")
     }
 
-    playlist.video.pull(videoId);
+    playlist.videos.pull(videoId);
     await playlist.save();
 
     return res.status(200).json(
@@ -131,6 +131,10 @@ const deletePlaylist = asyncHandler( async(req, res) => {
 
     if (!playlist) {
         throw new ApiError(404, "Playlist not found")
+    }
+
+    if (playlist.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized")
     }
 
     await Playlist.findByIdAndDelete(playlistId)
